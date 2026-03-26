@@ -490,14 +490,61 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:3/2;max-height:min(68dv
 
 <div id="toast"><strong id="toastTitle"></strong><span id="toastBody"></span></div>
 
-<!-- Firebase -->
-<script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getDatabase,ref,push,query,orderByChild,limitToLast,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-const app=initializeApp({databaseURL:"https://mochi-adventures-default-rtdb.firebaseio.com/"});
-const db=getDatabase(app);
-window._fb={db,ref,push,query,orderByChild,limitToLast,get,ready:true};
-document.dispatchEvent(new Event('fb-ready'));
+<!-- Firebase: pure REST API — no SDK, no imports, works everywhere -->
+<script>
+(function() {
+  // Firebase Realtime Database REST endpoint — no SDK needed at all
+  const DB = 'https://mochi-adventures-default-rtdb.firebaseio.com';
+
+  window.fbPushScore = async function(name, score, difficulty, level) {
+    try {
+      const res = await fetch(DB + '/leaderboard.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, score, difficulty, level, ts: Date.now() })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      console.log('Score saved to Firebase ✓');
+      return true;
+    } catch(e) {
+      console.error('Firebase write error:', e);
+      return false;
+    }
+  };
+
+  window.fbFetchScores = async function() {
+    try {
+      const res = await fetch(DB + '/leaderboard.json');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (!data) return [];
+      // data is an object keyed by push-ID — convert to sorted array
+      const arr = Object.values(data).sort((a, b) => b.score - a.score);
+      return arr.slice(0, 20);
+    } catch(e) {
+      console.error('Firebase read error:', e);
+      return [];
+    }
+  };
+
+  // Test connection on load and log exact result
+  window.fbReady = Promise.resolve(true);
+  (async function testFB() {
+    try {
+      const res = await fetch(DB + '/leaderboard.json?limitToLast=1');
+      if (res.status === 401)
+        console.error('FIREBASE 401: Permission denied. Set rules to allow read/write in Firebase Console.');
+      else if (res.status === 404)
+        console.error('FIREBASE 404: Database not found. Check your project URL.');
+      else if (res.ok)
+        console.log('FIREBASE OK: Connected to', DB);
+      else
+        console.error('FIREBASE ERROR: status', res.status, await res.text());
+    } catch(e) {
+      console.error('FIREBASE NETWORK ERROR:', e.message);
+    }
+  })();
+})();
 </script>
 
 <script>
@@ -553,9 +600,28 @@ function toast(t,b){document.getElementById('toastTitle').textContent=t;document
 window.goPage=function(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('page-'+p)?.classList.add('active');if(p!=='play'&&G.running&&!G.over)G.paused=true;if(p==='play'&&G.running&&!G.over)G.paused=false;if(p==='leaderboard')loadLb('lbFull');if(p==='home'){loadLb('lbHome');updateHomeStats();}resizeCanvas();};
 
 // ── Firebase ──────────────────────────────────────────────────────────────────
-async function fbPush(name,score,diff,level){if(!window._fb?.ready)return false;try{const f=window._fb;await f.push(f.ref(f.db,'leaderboard'),{name,score,difficulty:diff,level,ts:Date.now()});return true;}catch(e){console.warn('FB:',e);return false;}}
-async function fbFetch(){if(!window._fb?.ready)return[];try{const f=window._fb,q=f.query(f.ref(f.db,'leaderboard'),f.orderByChild('score'),f.limitToLast(20));const s=await f.get(q);if(!s.exists())return[];const a=[];s.forEach(c=>a.push(c.val()));return a.sort((a,b)=>b.score-a.score);}catch(e){return[];}}
-async function loadLb(id){const el=document.getElementById(id);if(!el)return;el.innerHTML='<div class="lb-loading">Loading global scores…</div>';const rows=await fbFetch();if(!rows.length){el.innerHTML='<div class="lb-empty">No pilots on record — be the first legend.</div>';return;}const cls=['g','s','b'];el.innerHTML=rows.slice(0,10).map((r,i)=>`<div class="lb-row"><div class="lb-rank ${cls[i]||''}">#${i+1}</div><div class="lb-name">${esc(r.name)}<br><span class="lb-meta">${r.difficulty||'?'} · Lv ${r.level||1}</span></div><div class="lb-score">${Number(r.score).toLocaleString()}</div></div>`).join('');}
+async function fbPush(name, score, diff, level) {
+  try { return await window.fbPushScore(name, score, diff, level); }
+  catch(e) { console.error('fbPush error:', e); return false; }
+}
+async function fbFetch() {
+  try { return await window.fbFetchScores(); }
+  catch(e) { console.error('fbFetch error:', e); return []; }
+}
+async function loadLb(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '<div class="lb-loading">Loading global scores…</div>';
+  const rows = await fbFetch();
+  if (!rows.length) { el.innerHTML = '<div class="lb-empty">No pilots on record — be the first legend.</div>'; return; }
+  const cls = ['g','s','b'];
+  el.innerHTML = rows.slice(0,10).map((r,i) => `
+    <div class="lb-row">
+      <div class="lb-rank ${cls[i]||''}">#${i+1}</div>
+      <div class="lb-name">${esc(r.name)}<br><span class="lb-meta">${r.difficulty||'?'} · Lv ${r.level||1}</span></div>
+      <div class="lb-score">${Number(r.score).toLocaleString()}</div>
+    </div>`).join('');
+}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 async function saveScore(){
@@ -564,7 +630,7 @@ async function saveScore(){
   localStorage.setItem('mochi_name',name);G.scoreSaved=true;
   ['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b){b.disabled=true;b.textContent='⏳ Saving…';}});
   const ok=await fbPush(name,G.lastScore,DIFFS[G.difficulty].label,G.level);
-  if(ok){['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent='✅ Saved!';});toast('Global Leaderboard!',name+' · '+G.lastScore.toLocaleString()+' pts');loadLb('lbHome');}
+  if(ok){['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent='✅ Saved!';});toast('Global Leaderboard!',name+' · '+G.lastScore.toLocaleString()+' pts');loadLb('lbHome');loadLb('lbFull');}
   else{G.scoreSaved=false;['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b){b.disabled=false;b.textContent=id==='modalSave'?'💾 Save to Global Leaderboard':'💾 Save Score';}});toast('Save Failed','Check connection and retry.');}
 }
 
@@ -831,7 +897,7 @@ function initEvents(){
   document.getElementById('pauseBtn').addEventListener('click',()=>{if(!G.running||G.over)return;G.paused=!G.paused;setSt(G.paused?'Paused. Mochi holds position.':'Back in the fight.');});
   document.getElementById('heroStartBtn').addEventListener('click',()=>{goPage('play');startGame();});
   document.getElementById('ovRestart').addEventListener('click',()=>{document.getElementById('cOverlay').classList.remove('show');startGame();});
-  document.getElementById('ovSave').addEventListener('click',()=>{saveScore();openModal();});
+  document.getElementById('ovSave').addEventListener('click',async()=>{await saveScore();loadLb('lbHome');loadLb('lbFull');openModal();});
   document.getElementById('ovHome').addEventListener('click',()=>{document.getElementById('cOverlay').classList.remove('show');goPage('home');});
   document.getElementById('modalPlay').addEventListener('click',()=>{closeModal();startGame();});
   document.getElementById('modalSave').addEventListener('click',saveScore);
