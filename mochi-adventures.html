@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Adventures of Mochi</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #04030b;
+      --bg2:       #0c0b24;
+      --bg3:       #12112e;
+      --panel:     rgba(10,9,30,0.92);
+      --border:    rgba(188,162,255,0.18);
+      --border2:   rgba(255,255,255,0.08);
+      --text:      #f0eeff;
+      --muted:     #9993c4;
+      --purple:    #bca2ff;
+      --purple2:   #7c5ce7;
+      --blue:      #110fff;
+      --pink:      #ff5ea8;
+      --cyan:      #7ef4ff;
+      --green:     #89ff5a;
+      --gold:      #ffd166;
+      --danger:    #ff5f5f;
+      --radius:    16px;
+      --radius-lg: 24px;
+      --glow-p:    0 0 28px rgba(188,162,255,0.3);
+      --glow-c:    0 0 28px rgba(126,244,255,0.3);
+      --glow-g:    0 0 28px rgba(137,255,90,0.3);
+      --shadow:    0 20px 60px rgba(0,0,0,0.5);
+      --font-head: 'Orbitron', sans-serif;
+      --font-body: 'Exo 2', sans-serif;
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--text);
+      background: var(--bg);
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* ── Animated background ── */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(188,162,255,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(17,15,255,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(126,244,255,0.06) 0%, transparent 45%),
+        linear-gradient(180deg, #0c0b24 0%, #04030b 100%);
+    }
+
+    .stars {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1.2px),
+        radial-gradient(circle, rgba(126,244,255,0.8) 1px, transparent 1.3px),
+        radial-gradient(circle, rgba(188,162,255,0.7) 1px, transparent 1.2px);
+      background-size: 140px 140px, 200px 200px, 260px 260px;
+      opacity: 0.25;
+      animation: drift 50s linear infinite;
+    }
+    @keyframes drift { from{transform:translateY(0)} to{transform:translateY(140px)} }
+
+    /* ── App shell ── */
+    .app {
+      position: relative; z-index: 1;
+      width: min(1400px, calc(100vw - 24px));
+      margin: 12px auto;
+    }
+
+    .page { display: none; }
+    .page.active { display: grid; animation: fadeUp 0.3s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+    /* ── Panel base ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+      backdrop-filter: blur(20px);
+    }
+
+    /* ── Home page ── */
+    #page-home {
+      width: 100vw; min-height: 100dvh;
+      margin: 0; place-items: center;
+    }
+
+    .home-shell {
+      width: min(1100px, calc(100vw - 32px));
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px 0;
+    }
+
+    .home-left {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .home-hero {
+      padding: 36px 32px;
+      background: linear-gradient(135deg,
+        rgba(188,162,255,0.12) 0%,
+        rgba(17,15,255,0.08) 50%,
+        rgba(126,244,255,0.06) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .home-hero::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(188,162,255,0.2), transparent 70%);
+      pointer-events: none;
+    }
+
+    .home-eyebrow {
+      font-family: var(--font-head);
+      font-size: 0.65rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--cyan);
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 16px;
+    }
+    .home-eyebrow::before {
+      content: ''; display: block;
+      width: 24px; height: 2px;
+      background: var(--cyan);
+      box-shadow: var(--glow-c);
+    }
+
+    .home-title {
+      font-family: var(--font-head);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.05; font-weight: 900;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #fff 30%, var(--purple) 70%, var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      text-shadow: none;
+      filter: drop-shadow(0 0 20px rgba(188,162,255,0.4));
+    }
+
+    .home-sub {
+      color: var(--muted); font-size: 0.9rem;
+      line-height: 1.65; max-width: 380px;
+    }
+
+    .mochi-portrait {
+      width: clamp(90px,14vw,130px); height: clamp(90px,14vw,130px);
+      border-radius: 24px; overflow: hidden;
+      border: 3px solid rgba(188,162,255,0.35);
+      box-shadow: var(--glow-p);
+      flex-shrink: 0; margin-top: 20px;
+    }
+    .mochi-portrait img { width: 100%; height: 100%; object-fit: cover; }
+
+    .genlayer-logo {
+      height: 28px; width: auto; opacity: 0.8; margin-top: 8px;
+      filter: drop-shadow(0 0 8px rgba(188,162,255,0.3));
+    }
+
+    /* ── Menu card ── */
+    .menu-card {
+      padding: 24px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    .menu-label {
+      font-family: var(--font-head);
+      font-size: 0.62rem; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: var(--font-body); font-weight: 700; font-size: 0.9rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 13px 20px; border-radius: var(--radius);
+      border: none; cursor: pointer;
+      transition: all var(--transition);
+      position: relative; overflow: hidden;
+    }
+    .btn::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background var(--transition);
+    }
+    .btn:hover::after { background: rgba(255,255,255,0.08); }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple2), var(--blue));
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(17,15,255,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .btn-primary:hover { box-shadow: var(--glow-p), 0 8px 24px rgba(17,15,255,0.4); transform: translateY(-2px); }
+
+    .btn-launch {
+      background: linear-gradient(135deg, #ff5ea8, #c8185f);
+      color: #fff; font-size: 1rem; padding: 16px 24px;
+      box-shadow: 0 10px 28px rgba(255,94,168,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .btn-launch:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(255,94,168,0.45); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border2); color: var(--text);
+    }
+    .btn-secondary:hover { border-color: var(--border); background: rgba(255,255,255,0.1); }
+
+    .btn-danger {
+      background: rgba(255,95,95,0.15);
+      border: 1px solid rgba(255,95,95,0.3); color: var(--danger);
+    }
+    .btn-danger:hover { background: rgba(255,95,95,0.25); }
+
+    .btn-success {
+      background: linear-gradient(135deg, rgba(137,255,90,0.2), rgba(137,255,90,0.08));
+      border: 1px solid rgba(137,255,90,0.3); color: var(--green);
+    }
+    .btn-success:hover { background: rgba(137,255,90,0.25); box-shadow: var(--glow-g); }
+
+    .btn-sm { padding: 9px 14px; font-size: 0.78rem; }
+    .btn-full { width: 100%; }
+    .btn-icon { font-size: 1.1rem; }
+
+    /* ── Home right panel ── */
+    .home-right {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .diff-grid { display: flex; flex-direction: column; gap: 8px; }
+
+    .diff-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: var(--radius);
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,0.03);
+      cursor: pointer; transition: all var(--transition);
+    }
+    .diff-item:hover { border-color: var(--border); background: rgba(255,255,255,0.06); }
+    .diff-item.active {
+      border-color: rgba(255,209,102,0.5);
+      background: rgba(255,209,102,0.07);
+      box-shadow: inset 0 0 0 1px rgba(255,209,102,0.15);
+    }
+
+    .diff-indicator {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .diff-rookie  .diff-indicator { background: var(--green); box-shadow: var(--glow-g); }
+    .diff-hero    .diff-indicator { background: var(--gold); box-shadow: 0 0 12px rgba(255,209,102,0.5); }
+    .diff-legend  .diff-indicator { background: var(--danger); box-shadow: 0 0 12px rgba(255,95,95,0.5); }
+
+    .diff-info { flex: 1; min-width: 0; }
+    .diff-name {
+      font-family: var(--font-head); font-size: 0.75rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .diff-desc { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .diff-mult {
+      font-family: var(--font-head); font-size: 0.7rem;
+      color: var(--gold); flex-shrink: 0;
+    }
+
+    /* ── Stats strip ── */
+    .stats-strip {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+    }
+    .stat-pill {
+      padding: 12px 14px; border-radius: var(--radius);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border2); text-align: center;
+    }
+    .stat-pill-label {
+      font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--muted); margin-bottom: 4px;
+    }
+    .stat-pill-value {
+      font-family: var(--font-head); font-size: 1.1rem;
+      font-weight: 900; color: var(--purple);
+    }
+
+    /* ── Leaderboard ── */
+    .lb-list { display: flex; flex-direction: column; gap: 6px; }
+    .lb-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border2);
+    }
+    .lb-rank {
+      font-family: var(--font-head); font-size: 0.7rem;
+      color: var(--muted); width: 22px; flex-shrink: 0; text-align: center;
+    }
+    .lb-rank.gold   { color: var(--gold); }
+    .lb-rank.silver { color: #c0c0c0; }
+    .lb-rank.bronze { color: #cd7f32; }
+    .lb-name { flex: 1; font-size: 0.85rem; font-weight: 600; }
+    .lb-meta { font-size: 0.72rem; color: var(--muted); }
+    .lb-score {
+      font-family: var(--font-head); font-size: 0.9rem;
+      font-weight: 900; color: var(--cyan);
+    }
+    .lb-empty { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 20px; }
+
+    /* ── Section label ── */
+    .section-label {
+      font-family: var(--font-head);
+      font-size: 0.65rem; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--muted);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border2), transparent);
+    }
+
+    /* ── Sub-pages (how to, settings, leaderboard) ── */
+    #page-howto, #page-settings, #page-leaderboard {
+      width: min(860px, calc(100vw - 24px));
+      margin: 40px auto;
+    }
+
+    .sub-page-inner {
+      padding: 32px; display: flex; flex-direction: column; gap: 24px;
+    }
+
+    .sub-page-header {
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    .sub-eyebrow {
+      font-family: var(--font-head); font-size: 0.6rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 8px;
+    }
+
+    .sub-title {
+      font-family: var(--font-head); font-size: clamp(1.6rem,4vw,2.4rem);
+      font-weight: 900; text-transform: uppercase;
+      background: linear-gradient(135deg, #fff, var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; filter: drop-shadow(0 0 16px rgba(188,162,255,0.3));
+    }
+
+    .sub-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-top: 8px; }
+
+    .info-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .info-section {
+      padding: 18px; border-radius: var(--radius);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border2);
+    }
+    .info-section h3 {
+      font-family: var(--font-head); font-size: 0.7rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--purple); margin-bottom: 12px;
+    }
+    .tip-list { display: flex; flex-direction: column; gap: 8px; }
+    .tip-item {
+      display: flex; gap: 10px; font-size: 0.85rem;
+      color: var(--muted); line-height: 1.55;
+    }
+    .tip-item::before {
+      content: '›'; color: var(--cyan); font-weight: 900; flex-shrink: 0;
+    }
+
+    .settings-block {
+      padding: 16px 18px; border-radius: var(--radius);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border2);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .settings-block strong { font-size: 0.85rem; font-weight: 700; }
+    .settings-block label { color: var(--muted); font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .range-row { display: flex; align-items: center; gap: 12px; }
+    .range-row input[type=range] {
+      flex: 1; accent-color: var(--purple2);
+      height: 4px; cursor: pointer;
+    }
+    .range-val { font-family: var(--font-head); font-size: 0.75rem; color: var(--purple); width: 36px; text-align: right; }
+
+    .sub-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ── Play page ── */
+    #page-play {
+      width: 100vw; min-height: 100dvh; margin: 0;
+      place-items: center;
+    }
+
+    .play-shell {
+      width: min(1060px, calc(100vw - 24px));
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+
+    /* ── HUD bar ── */
+    .hud-bar {
+      display: grid; grid-template-columns: repeat(5,1fr); gap: 10px;
+    }
+    .hud-cell {
+      padding: 12px 14px; border-radius: var(--radius);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border2);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .hud-cell-label {
+      font-family: var(--font-head); font-size: 0.58rem;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+    }
+    .hud-cell-value {
+      font-family: var(--font-head); font-size: 1.25rem;
+      font-weight: 900; color: var(--text); line-height: 1;
+    }
+    .hud-cell.hud-score .hud-cell-value { color: var(--gold); }
+    .hud-cell.hud-lives .hud-cell-value { color: var(--pink); }
+    .hud-cell.hud-level .hud-cell-value { color: var(--cyan); }
+    .hud-cell.hud-wave  .hud-cell-value { color: var(--purple); }
+    .hud-cell.hud-mode  .hud-cell-value { color: var(--green); font-size: 0.9rem; }
+
+    /* ── Arena ── */
+    .arena-wrap {
+      position: relative;
+      border-radius: 20px; overflow: hidden;
+      border: 1px solid var(--border2);
+      background: rgba(4,3,11,0.9);
+      box-shadow: inset 0 0 60px rgba(0,0,0,0.5);
+    }
+    .arena-wrap::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(188,162,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(188,162,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 1;
+    }
+
+    canvas {
+      display: block; width: 100%; height: auto;
+      aspect-ratio: 3/2;
+      max-height: min(70dvh, 700px);
+      touch-action: none;
+      position: relative; z-index: 2;
+    }
+
+    /* ── Restart overlay on canvas ── */
+    .canvas-overlay {
+      position: absolute; inset: 0; z-index: 10;
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      background: rgba(4,3,11,0.82);
+      backdrop-filter: blur(8px);
+      border-radius: inherit;
+    }
+    .canvas-overlay.show { display: flex; animation: fadeUp 0.35s ease; }
+
+    .overlay-title {
+      font-family: var(--font-head); font-size: clamp(1.6rem,5vw,3rem);
+      font-weight: 900; text-transform: uppercase; text-align: center;
+      line-height: 1.1;
+    }
+    .overlay-title.fail {
+      background: linear-gradient(135deg, var(--danger), #ff9d9d);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      filter: drop-shadow(0 0 20px rgba(255,95,95,0.5));
+    }
+    .overlay-title.win {
+      background: linear-gradient(135deg, var(--gold), #ffe5a0);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      filter: drop-shadow(0 0 20px rgba(255,209,102,0.5));
+    }
+
+    .overlay-score {
+      font-family: var(--font-head); font-size: clamp(1rem,3vw,1.6rem);
+      color: var(--muted); text-align: center; letter-spacing: 0.04em;
+    }
+    .overlay-score span { color: var(--gold); }
+
+    .overlay-btns {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    }
+    .overlay-btns .btn { min-width: 140px; }
+
+    /* ── Status / controls bar ── */
+    .play-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; flex-wrap: wrap;
+    }
+    .status-text { font-size: 0.82rem; color: var(--muted); }
+    .controls-hint { font-size: 0.75rem; color: var(--text-3,#5a5480); }
+
+    .play-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* ── Mobile controls ── */
+    .mobile-controls {
+      display: none;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px; align-items: center;
+    }
+    .touch-cluster { display: flex; gap: 8px; }
+    .touch-btn {
+      min-height: 52px; min-width: 56px;
+      border-radius: 14px;
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,0.07);
+      color: var(--text); font-size: 1.1rem; font-weight: 900;
+      cursor: pointer; touch-action: manipulation;
+      user-select: none; -webkit-user-select: none;
+      transition: background var(--transition);
+      font-family: var(--font-body);
+    }
+    .touch-btn:active { background: rgba(255,255,255,0.15); }
+    .touch-btn.fire {
+      background: linear-gradient(135deg, rgba(255,94,168,0.3), rgba(124,92,231,0.3));
+      border-color: rgba(255,94,168,0.3);
+      color: var(--pink); min-width: 100px;
+      box-shadow: 0 0 20px rgba(255,94,168,0.15);
+    }
+
+    /* ── Game over modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 50;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(12px);
+    }
+    .modal-overlay.open { display: flex; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    .modal {
+      width: min(560px, 100%);
+      max-height: calc(100dvh - 40px); overflow-y: auto;
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(18,17,46,0.98), rgba(4,3,11,0.98));
+      border: 1px solid var(--border);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      animation: scaleIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    @keyframes scaleIn { from{transform:scale(0.9);opacity:0} to{transform:none;opacity:1} }
+
+    .modal-title {
+      font-family: var(--font-head); font-size: 1.8rem;
+      font-weight: 900; text-transform: uppercase;
+    }
+    .modal-title.fail { color: var(--danger); text-shadow: 0 0 24px rgba(255,95,95,0.4); }
+    .modal-title.win  { color: var(--gold);   text-shadow: 0 0 24px rgba(255,209,102,0.4); }
+
+    .modal-summary { color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+
+    .modal-score-box {
+      padding: 16px; border-radius: var(--radius);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border2);
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .msb-item { text-align: center; }
+    .msb-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 4px; }
+    .msb-value { font-family: var(--font-head); font-size: 1.3rem; font-weight: 900; color: var(--gold); }
+
+    .name-input-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .name-input-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .name-input {
+      width: 100%; padding: 12px 14px;
+      border-radius: var(--radius); font-family: var(--font-body);
+      font-size: 0.9rem; color: var(--text);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border2); outline: none;
+      transition: border-color var(--transition);
+    }
+    .name-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,92,231,0.15); }
+    .name-input::placeholder { color: var(--muted); opacity: 0.6; }
+
+    .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+    .modal-actions-row { display: flex; gap: 8px; }
+    .modal-actions-row .btn { flex: 1; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 20px; right: 20px; z-index: 60;
+      display: none; max-width: 300px;
+      padding: 14px 16px; border-radius: var(--radius);
+      background: rgba(12,11,36,0.97);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      animation: slideIn 0.3s ease;
+    }
+    #toast.show { display: block; }
+    @keyframes slideIn { from{transform:translateX(110%);opacity:0} to{transform:none;opacity:1} }
+    #toast strong { display: block; color: var(--gold); margin-bottom: 4px; font-size: 0.85rem; }
+    #toast span { color: var(--muted); font-size: 0.82rem; }
+
+    /* ── Badge ── */
+    .new-badge {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 99px; font-size: 0.62rem;
+      font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(255,209,102,0.15);
+      border: 1px solid rgba(255,209,102,0.35);
+      color: var(--gold); margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* ── Responsive ── */
+    @media(max-width:900px) {
+      .home-shell { grid-template-columns: 1fr; max-width: 500px; }
+      .info-2col { grid-template-columns: 1fr; }
+      .hud-bar { grid-template-columns: repeat(3,1fr); }
+    }
+    @media(max-width:640px) {
+      .hud-bar { grid-template-columns: 1fr 1fr; }
+      .mobile-controls { display: grid; }
+      .controls-hint { display: none; }
+      .play-shell { padding: 10px; gap: 10px; }
+      canvas { max-height: min(55dvh,420px); }
+      .sub-page-inner { padding: 20px; }
+      .stats-strip { grid-template-columns: 1fr 1fr; }
+    }
+    @media(max-width:420px) {
+      .hud-bar { grid-template-columns: 1fr 1fr; gap:6px; }
+      .hud-cell { padding: 8px 10px; }
+      .hud-cell-value { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="stars"></div>
+
+<!-- ════════════════════════════════════ HOME ══════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <div class="home-shell">
+    <div class="home-left">
+      <!-- Hero card -->
+      <div class="home-hero panel">
+        <div class="home-eyebrow">Neon Action Adventure</div>
+        <div class="home-title">The Adventures<br>of Mochi</div>
+        <p class="home-sub">A pixel-perfect battle across the neon warzone. Survive alien waves, chain combos, and dethrone every boss Mochi can find.</p>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:16px">
+          <div class="mochi-portrait">
+            <img src="./mochi.jpg" alt="Mochi" onerror="this.parentElement.style.background='linear-gradient(135deg,#bca2ff,#7c5ce7)';this.style.display='none'">
+          </div>
+          <img class="genlayer-logo"
+            src="https://cdn.prod.website-files.com/660b0a62a5f7d77241d6fa4c/678fb6bc95d811e8fbaafc2a_GenLayer%20Large%20White%20PNG.png"
+            alt="GenLayer">
+        </div>
+      </div>
+
+      <!-- Best scores -->
+      <div class="panel" style="padding:18px">
+        <div class="section-label">Your Stats</div>
+        <div class="stats-strip">
+          <div class="stat-pill">
+            <div class="stat-pill-label">Best Score</div>
+            <div class="stat-pill-value" id="homeHighScore">0</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-pill-label">Last Run</div>
+            <div class="stat-pill-value" id="homeLastScore">—</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-pill-label">Runs</div>
+            <div class="stat-pill-value" id="homeRunCount">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick nav -->
+      <div class="panel menu-card">
+        <div class="menu-label">Menu</div>
+        <button class="btn btn-launch btn-full" id="heroStartBtn">⚡ Launch Mission</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-secondary" data-nav="howto">📖 How to Play</button>
+          <button class="btn btn-secondary" data-nav="settings">⚙️ Settings</button>
+          <button class="btn btn-secondary" data-nav="leaderboard">🏆 Leaderboard</button>
+          <button class="btn btn-secondary" data-nav="play">🎮 Game Screen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-right">
+      <!-- Difficulty -->
+      <div class="panel" style="padding:20px">
+        <div class="section-label">Select Difficulty</div>
+        <div class="diff-grid" id="diffListHome"></div>
+      </div>
+
+      <!-- Leaderboard preview -->
+      <div class="panel" style="padding:20px;flex:1">
+        <div class="section-label">Top Pilots</div>
+        <div class="lb-list" id="lbHome"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ HOW TO ══════════════════════════════════ -->
+<div class="page" id="page-howto">
+  <div class="panel sub-page-inner">
+    <div class="sub-page-header">
+      <div class="sub-eyebrow">Combat Manual</div>
+      <div class="sub-title">How to Play</div>
+      <p class="sub-desc">Mochi is the galaxy's last adorable line of defense. Master the controls, read enemy patterns, and keep those combo chains alive.</p>
+    </div>
+    <div class="info-2col">
+      <div class="info-section">
+        <h3>Controls</h3>
+        <div class="tip-list">
+          <div class="tip-item">Move Mochi with <kbd>A</kbd> / <kbd>D</kbd> or Arrow keys.</div>
+          <div class="tip-item">Press <kbd>Space</kbd> to fire Mochi's blaster.</div>
+          <div class="tip-item">Press <kbd>P</kbd> to pause mid-mission.</div>
+          <div class="tip-item">Use on-screen touch controls on mobile.</div>
+        </div>
+      </div>
+      <div class="info-section">
+        <h3>Objectives</h3>
+        <div class="tip-list">
+          <div class="tip-item">Clear all aliens in a wave to trigger the Boss.</div>
+          <div class="tip-item">Defeat the Boss to advance the level.</div>
+          <div class="tip-item">Chain kills quickly to build Combo multipliers.</div>
+          <div class="tip-item">Avoid alien shots and body contact.</div>
+        </div>
+      </div>
+      <div class="info-section">
+        <h3>Enemy Types</h3>
+        <div class="tip-list">
+          <div class="tip-item"><strong>Scout</strong> — Fast, light, swooping movements.</div>
+          <div class="tip-item"><strong>Spitter</strong> — Fires spread shots. Predictable but dangerous.</div>
+          <div class="tip-item"><strong>Tank</strong> — 3 HP. Splits into 2 mini-aliens when destroyed.</div>
+          <div class="tip-item"><strong>Diver</strong> — Dives toward Mochi. Requires fast reflexes.</div>
+        </div>
+      </div>
+      <div class="info-section">
+        <h3>Scoring Tips</h3>
+        <div class="tip-list">
+          <div class="tip-item">Kill streaks add +20 bonus points per combo hit.</div>
+          <div class="tip-item">Boss kills award 900+ bonus points.</div>
+          <div class="tip-item">Higher difficulty = higher score multiplier.</div>
+          <div class="tip-item">Save your callsign after a run to hit the board.</div>
+        </div>
+      </div>
+    </div>
+    <div class="sub-actions">
+      <button class="btn btn-primary" data-nav="play">🎮 Play Now</button>
+      <button class="btn btn-secondary" data-nav="home">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ SETTINGS ══════════════════════════════════ -->
+<div class="page" id="page-settings">
+  <div class="panel sub-page-inner">
+    <div class="sub-page-header">
+      <div class="sub-eyebrow">Mission Tuning</div>
+      <div class="sub-title">Settings</div>
+      <p class="sub-desc">Calibrate the battle experience before throwing Mochi into the fray.</p>
+    </div>
+
+    <div>
+      <div class="section-label">Difficulty</div>
+      <div class="diff-grid" id="diffListSettings"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="section-label">Options</div>
+      <div class="settings-block">
+        <strong>Screen Shake</strong>
+        <label><input type="checkbox" id="screenShakeToggle" checked> Enable shake on hits and explosions</label>
+      </div>
+      <div class="settings-block">
+        <strong>Music Volume</strong>
+        <div class="range-row">
+          <input type="range" id="musicVolume" min="0" max="100" value="40">
+          <span class="range-val" id="musicVolumeValue">40%</span>
+        </div>
+      </div>
+      <div class="settings-block">
+        <strong>SFX Volume</strong>
+        <div class="range-row">
+          <input type="range" id="sfxVolume" min="0" max="100" value="70">
+          <span class="range-val" id="sfxVolumeValue">70%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-actions">
+      <button class="btn btn-primary" data-nav="play">Back to Game</button>
+      <button class="btn btn-secondary" data-nav="home">← Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ LEADERBOARD ════════════════════════════════ -->
+<div class="page" id="page-leaderboard">
+  <div class="panel sub-page-inner">
+    <div class="sub-page-header">
+      <div class="sub-eyebrow">Hall of Fame</div>
+      <div class="sub-title">Leaderboard</div>
+      <p class="sub-desc">The sharpest Mochi pilots in the galaxy. Chase the top score and claim legendary status.</p>
+    </div>
+    <div class="lb-list" id="lbFull"></div>
+    <div class="sub-actions">
+      <button class="btn btn-primary" data-nav="play">🎮 Play Now</button>
+      <button class="btn btn-secondary" data-nav="home">← Home</button>
+      <button class="btn btn-danger btn-sm" id="clearLbBtn">🗑 Clear Board</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ PLAY PAGE ═════════════════════════════════ -->
+<div class="page" id="page-play">
+  <div class="play-shell panel">
+    <!-- HUD -->
+    <div class="hud-bar">
+      <div class="hud-cell hud-score">
+        <div class="hud-cell-label">Score</div>
+        <div class="hud-cell-value" id="scoreValue">0</div>
+      </div>
+      <div class="hud-cell hud-lives">
+        <div class="hud-cell-label">Lives</div>
+        <div class="hud-cell-value" id="livesValue">3</div>
+      </div>
+      <div class="hud-cell hud-level">
+        <div class="hud-cell-label">Level</div>
+        <div class="hud-cell-value" id="levelValue">1</div>
+      </div>
+      <div class="hud-cell hud-wave">
+        <div class="hud-cell-label">Wave</div>
+        <div class="hud-cell-value" id="waveValue">1</div>
+      </div>
+      <div class="hud-cell hud-mode">
+        <div class="hud-cell-label">Mode</div>
+        <div class="hud-cell-value" id="modeValue">Rookie</div>
+      </div>
+    </div>
+
+    <!-- Arena -->
+    <div class="arena-wrap">
+      <canvas id="gameCanvas" width="960" height="640"></canvas>
+
+      <!-- ── Instant restart overlay ── -->
+      <div class="canvas-overlay" id="canvasOverlay">
+        <div class="overlay-title" id="overlayTitle">Mission Failed</div>
+        <div class="overlay-score" id="overlayScore">Score: <span id="overlayScoreVal">0</span></div>
+        <div class="overlay-btns">
+          <button class="btn btn-launch" id="overlayRestartBtn">⚡ Restart Now</button>
+          <button class="btn btn-secondary" id="overlaySaveBtn">💾 Save Score</button>
+          <button class="btn btn-secondary" id="overlayHomeBtn">🏠 Home</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer bar -->
+    <div class="play-footer">
+      <span class="status-text" id="statusText">Mochi is standing by. Launch the mission.</span>
+      <div class="play-actions">
+        <button class="btn btn-secondary btn-sm" id="pauseBtn">⏸ Pause</button>
+        <button class="btn btn-secondary btn-sm" id="startBtn">▶ Start</button>
+        <button class="btn btn-secondary btn-sm" data-nav="home">🏠</button>
+      </div>
+      <span class="controls-hint">Move: A/D or ← → | Fire: Space | Pause: P</span>
+    </div>
+
+    <!-- Mobile controls -->
+    <div class="mobile-controls">
+      <div class="touch-cluster">
+        <button class="touch-btn" id="touchLeft">◀</button>
+        <button class="touch-btn" id="touchRight">▶</button>
+      </div>
+      <div></div>
+      <button class="touch-btn fire" id="touchFire">FIRE 🔥</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ GAME OVER MODAL ═══════════════════════════ -->
+<div class="modal-overlay" id="gameOverModal">
+  <div class="modal">
+    <div class="modal-title" id="gameOverTitle">Mission Failed</div>
+    <p class="modal-summary" id="gameOverSummary">The alien rush was too much. Reload and hit harder next time.</p>
+
+    <div class="modal-score-box">
+      <div class="msb-item">
+        <div class="msb-label">This Run</div>
+        <div class="msb-value" id="modalRunScore">0</div>
+      </div>
+      <div class="msb-item">
+        <div class="msb-label">Best Score</div>
+        <div class="msb-value" id="modalBestScore">0</div>
+      </div>
+    </div>
+
+    <div class="name-input-wrap">
+      <div class="name-input-label">Callsign for leaderboard</div>
+      <input class="name-input" id="playerNameInput" maxlength="18" placeholder="Enter your callsign…" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-success btn-full" id="saveScoreBtn">💾 Save Score to Leaderboard</button>
+      <div class="modal-actions-row">
+        <button class="btn btn-primary" id="playAgainBtn">⚡ Play Again</button>
+        <button class="btn btn-secondary" id="gameOverHomeBtn">🏠 Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast">
+  <strong id="toastTitle">Update</strong>
+  <span id="toastBody">Done.</span>
+</div>
+
+<script>
+'use strict';
+
+// ── Canvas & sprite ─────────────────────────────────────────────────────────
+const canvas  = document.getElementById('gameCanvas');
+const ctx     = canvas.getContext('2d');
+
+const mochiImg    = new Image();
+const mochiOffscreen = document.createElement('canvas');
+const mochiCtx    = mochiOffscreen.getContext('2d', { willReadFrequently: true });
+let mochiReady    = false;
+
+mochiImg.src = './mochi.jpg';
+mochiImg.onload = () => {
+  mochiOffscreen.width  = mochiImg.width;
+  mochiOffscreen.height = mochiImg.height;
+  mochiCtx.drawImage(mochiImg, 0, 0);
+  const id = mochiCtx.getImageData(0, 0, mochiImg.width, mochiImg.height);
+  const d = id.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i] > 235 && d[i+1] > 235 && d[i+2] > 235) d[i+3] = 0;
+  }
+  mochiCtx.putImageData(id, 0, 0);
+  mochiReady = true;
+};
+
+// ── DOM refs ────────────────────────────────────────────────────────────────
+const ui = {
+  score:    document.getElementById('scoreValue'),
+  lives:    document.getElementById('livesValue'),
+  level:    document.getElementById('levelValue'),
+  wave:     document.getElementById('waveValue'),
+  mode:     document.getElementById('modeValue'),
+  status:   document.getElementById('statusText'),
+  arena:    document.querySelector('.arena-wrap'),
+  overlay:  document.getElementById('canvasOverlay'),
+  overlayTitle: document.getElementById('overlayTitle'),
+  overlayScore: document.getElementById('overlayScoreVal'),
+  touchL:   document.getElementById('touchLeft'),
+  touchR:   document.getElementById('touchRight'),
+  touchF:   document.getElementById('touchFire'),
+};
+
+// ── Difficulty definitions ───────────────────────────────────────────────────
+const DIFFS = {
+  rookie: { label:'Rookie', desc:'Warm-up chaos. Gentler waves and extra breathing room.', alienSpeed:38, fireRate:1.8, scoreMult:1,   lives:4, waveSize:5, color:'#89ff5a' },
+  hero:   { label:'Hero',   desc:'Balanced action. Faster waves, tighter dodges.',          alienSpeed:56, fireRate:1.2, scoreMult:1.4, lives:3, waveSize:6, color:'#ffd166' },
+  legend: { label:'Legend', desc:'Pure neon panic. Heavy pressure, huge bragging rights.',  alienSpeed:78, fireRate:0.82,scoreMult:1.9, lives:2, waveSize:7, color:'#ff5f5f' },
+};
+
+// ── Game state ───────────────────────────────────────────────────────────────
+const G = {
+  W:960, H:640,
+  running:false, paused:false, over:false,
+  score:0, lives:3, level:1, wave:1,
+  lastScore:0, highScore:0, runCount:0,
+  lastFrame:0, shakeTime:0, elapsed:0,
+  cooldown:0, enemyFireTimer:0,
+  combo:0, comboTimer:0,
+  difficulty:'rookie',
+  keys:{}, touch:{left:false,right:false,fire:false},
+  particles:[], projectiles:[], enemyProjectiles:[], enemies:[],
+  boss:null, bossStage:'wave',
+  settings:{ musicVolume:40, sfxVolume:70, screenShake:true },
+  scoreSaved: false,  // ← FIX: track per-run whether score was saved
+};
+
+const player = { x:G.W/2, y:G.H-70, width:52, height:58, speed:360, tilt:0, bob:0 };
+
+// ── Audio ────────────────────────────────────────────────────────────────────
+let audioCtx, musicTimer=0, musicStep=0;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function beep(freq, dur, vol, type='square') {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.value = vol * (G.settings.sfxVolume / 100);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start();
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+  o.stop(audioCtx.currentTime + dur);
+}
+
+function updateMusic(dt) {
+  if (!audioCtx || !G.running || G.paused || G.over || G.settings.musicVolume <= 0) return;
+  musicTimer -= dt;
+  if (musicTimer > 0) return;
+  const bass  = [164.81,164.81,196.0,220.0,164.81,196.0,246.94,220.0];
+  const pulse = [329.63,392.0,369.99,392.0,329.63,392.0,440.0,392.0];
+  const idx = musicStep % bass.length;
+  const e   = G.boss ? 1.15 : 1;
+  beep(bass[idx],  0.16, 0.012*e*(G.settings.musicVolume/40), 'sawtooth');
+  if (musicStep%2===0) beep(pulse[idx], 0.09, 0.006*e*(G.settings.musicVolume/40), 'triangle');
+  musicStep++;
+  musicTimer = G.boss ? 0.2 : 0.26;
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function toast(title, body) {
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastBody').textContent  = body;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ── Routing ──────────────────────────────────────────────────────────────────
+function goPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${page}`)?.classList.add('active');
+  if (page !== 'play' && G.running && !G.over) G.paused = true;
+  if (page === 'play' && G.running && !G.over)  G.paused = false;
+  if (page === 'leaderboard') renderLb('lbFull');
+  if (page === 'home') { renderLb('lbHome'); updateHomeStats(); }
+  resizeCanvas();
+}
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+function loadLb()   { try { return JSON.parse(localStorage.getItem('mochi_lb')||'[]'); } catch{return [];} }
+function saveLb(e)  { localStorage.setItem('mochi_lb', JSON.stringify(e)); }
+
+function renderLb(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const entries = loadLb();
+  if (!entries.length) { el.innerHTML = '<div class="lb-empty">No runs saved yet — be the first legend.</div>'; return; }
+  const ranks = ['gold','silver','bronze'];
+  el.innerHTML = entries.slice(0,10).map((e,i) => `
+    <div class="lb-row">
+      <div class="lb-rank ${ranks[i]||''}">#${i+1}</div>
+      <div class="lb-name">${e.name}<br><span class="lb-meta">${e.difficulty} · Lv ${e.level}</span></div>
+      <div class="lb-score">${e.score.toLocaleString()}</div>
+    </div>`).join('');
+}
+
+// ── FIX: saveScore — guarded against double submission ───────────────────────
+function saveScore() {
+  if (G.scoreSaved) { toast('Already saved', 'Your run is already on the board!'); return; }
+  const input = document.getElementById('playerNameInput');
+  const name  = input.value.trim() || 'Mochi Ace';
+  localStorage.setItem('mochi_last_name', name);
+
+  const entries = loadLb();
+  entries.push({ name, score: G.lastScore, difficulty: DIFFS[G.difficulty].label, level: G.level, createdAt: Date.now() });
+  entries.sort((a,b) => b.score - a.score);
+  saveLb(entries.slice(0,10));
+  G.scoreSaved = true;
+
+  // Disable the save button to prevent double-click
+  const btn = document.getElementById('saveScoreBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '✅ Score Saved!'; }
+  const overlayBtn = document.getElementById('overlaySaveBtn');
+  if (overlayBtn) { overlayBtn.disabled = true; overlayBtn.textContent = '✅ Saved'; }
+
+  toast('Leaderboard Updated', `${name} stormed the board with ${G.lastScore.toLocaleString()} pts!`);
+  renderLb('lbHome');
+}
+
+// ── Home stats ────────────────────────────────────────────────────────────────
+function updateHomeStats() {
+  document.getElementById('homeHighScore').textContent = G.highScore.toLocaleString();
+  document.getElementById('homeLastScore').textContent = G.lastScore ? G.lastScore.toLocaleString() : '—';
+  document.getElementById('homeRunCount').textContent  = G.runCount;
+}
+
+// ── Difficulty UI ─────────────────────────────────────────────────────────────
+function renderDiffUI() {
+  ['diffListHome','diffListSettings'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = Object.entries(DIFFS).map(([key,d]) => `
+      <div class="diff-item diff-${key} ${G.difficulty===key?'active':''}" data-diff="${key}">
+        <div class="diff-indicator"></div>
+        <div class="diff-info">
+          <div class="diff-name">${d.label}</div>
+          <div class="diff-desc">${d.desc}</div>
+        </div>
+        <div class="diff-mult">×${d.scoreMult.toFixed(1)}</div>
+      </div>`).join('');
+    el.querySelectorAll('[data-diff]').forEach(el => {
+      el.addEventListener('click', () => setDiff(el.dataset.diff));
+    });
+  });
+}
+
+function setDiff(key) {
+  G.difficulty = key;
+  localStorage.setItem('mochi_diff', key);
+  renderDiffUI();
+  ui.mode.textContent = DIFFS[key].label;
+  ui.status.textContent = `${DIFFS[key].label} mode armed. Mochi is ready.`;
+}
+
+// ── Settings UI ───────────────────────────────────────────────────────────────
+function applySettingsUI() {
+  document.getElementById('screenShakeToggle').checked = G.settings.screenShake;
+  document.getElementById('musicVolume').value = G.settings.musicVolume;
+  document.getElementById('sfxVolume').value   = G.settings.sfxVolume;
+  document.getElementById('musicVolumeValue').textContent = `${G.settings.musicVolume}%`;
+  document.getElementById('sfxVolumeValue').textContent   = `${G.settings.sfxVolume}%`;
+}
+
+// ── Canvas resize ─────────────────────────────────────────────────────────────
+function resizeCanvas() {
+  const wrap = ui.arena;
+  if (!wrap) return;
+  const r = wrap.getBoundingClientRect();
+  const avW = Math.max(200, r.width - 2);
+  const avH = Math.max(200, window.innerHeight * (window.innerWidth <= 640 ? 0.55 : 0.7));
+  const aspect = G.W / G.H;
+  let w = avW, h = w / aspect;
+  if (h > avH) { h = avH; w = h * aspect; }
+  canvas.style.width  = `${Math.floor(w)}px`;
+  canvas.style.height = `${Math.floor(h)}px`;
+}
+
+// ── Enemy helpers ──────────────────────────────────────────────────────────────
+function blueprint(type) {
+  const B = {
+    scout:   {w:30,h:28,spd:1.18,hp:1,shootRate:0.9,pts:90,  tint:'#97ff6d'},
+    spitter: {w:36,h:34,spd:0.95,hp:1,shootRate:1.7,pts:125, tint:'#66ff90'},
+    tank:    {w:48,h:42,spd:0.72,hp:3,shootRate:1.15,pts:220,tint:'#58d93f'},
+    diver:   {w:34,h:30,spd:1.06,hp:1,shootRate:0.7,pts:140, tint:'#8fff84'},
+    mini:    {w:20,h:18,spd:1.34,hp:1,shootRate:0.3,pts:60,  tint:'#b4ff91'},
+  };
+  return B[type] || B.scout;
+}
+
+function mkEnemy(type, opts) {
+  const b = blueprint(type);
+  return { ...opts, type, width:b.w, height:b.h, speed:opts.baseSpeed*b.spd,
+    maxHp:b.hp, hp:b.hp, shootRate:b.shootRate, points:b.pts, tint:b.tint, hitFlash:0 };
+}
+
+function rng(a,b) { return Math.random()*(b-a)+a; }
+function clamp(v,a,b) { return Math.max(a,Math.min(b,v)); }
+function hits(a,b) { return a.x<b.x+b.width && a.x+a.width>b.x && a.y<b.y+b.height && a.y+a.height>b.y; }
+
+function addParticles(x,y,color,n) {
+  for (let i=0;i<n;i++) G.particles.push({ x,y,vx:rng(-140,140),vy:rng(-160,160),life:rng(0.35,0.75),size:rng(2,5),color });
+}
+
+// ── Wave & boss ───────────────────────────────────────────────────────────────
+function spawnWave() {
+  const mode = DIFFS[G.difficulty];
+  const cols = mode.waveSize;
+  const rows = Math.min(3+Math.floor((G.level-1)/2), 6);
+  const sX   = (G.W-(cols-1)*98)/2-18;
+  G.enemies   = [];
+  for (let r=0;r<rows;r++) {
+    for (let c=0;c<cols;c++) {
+      const lane  = (r+c+G.level)%3;
+      const side  = c%2===0 ? -1 : 1;
+      const roll  = (r*5+c+G.level)%8;
+      const type  = roll===0?'tank':roll===1||roll===5?'spitter':roll===3?'diver':'scout';
+      G.enemies.push(mkEnemy(type,{
+        x: lane===0 ? sX+c*98 : (side<0?-60-c*12:G.W+30+c*12),
+        y: lane===2 ? -50-r*38 : 88+r*76,
+        baseSpeed: mode.alienSpeed+G.level*4,
+        dir: side,
+        formationX: sX+c*98,
+        formationY: 88+r*76,
+        behavior: type==='diver'?'dive':lane===0?'swoop':lane===1?'flank':'drop',
+        angle: rng(0,Math.PI*2), entered:false,
+      }));
+    }
+  }
+}
+
+function spawnBoss() {
+  const hp = 10+G.level*3+(G.difficulty==='legend'?6:G.difficulty==='hero'?3:0);
+  G.boss = { x:G.W/2-90,y:72,width:180,height:120,speed:DIFFS[G.difficulty].alienSpeed*0.62+G.level*8,
+    dir:1,angle:0,hp,maxHp:hp,hitFlash:0,fireCooldown:0.7 };
+  G.bossStage = 'boss';
+  ui.status.textContent = `Boss incoming. Level ${G.level} commander entering the arena.`;
+  toast('Boss Fight!', `Level ${G.level} commander deployed.`);
+}
+
+function destroyBoss() {
+  if (!G.boss) return;
+  addParticles(G.boss.x+G.boss.width/2,G.boss.y+G.boss.height/2,'#ffd166',42);
+  G.score += (900+G.level*120)*DIFFS[G.difficulty].scoreMult;
+  G.boss = null; G.bossStage = 'wave';
+  G.level++; G.wave++;
+  spawnWave();
+  beep(340,0.22,0.05,'sawtooth'); beep(520,0.28,0.03,'triangle');
+  ui.status.textContent = `Boss down. Level ${G.level} begins.`;
+}
+
+// ── Player reset & game reset ─────────────────────────────────────────────────
+function resetPlayer() { player.x=G.W/2-player.width/2; player.y=G.H-90; }
+
+function resetGame() {
+  const mode = DIFFS[G.difficulty];
+  G.running=true; G.paused=false; G.over=false;
+  G.score=0; G.level=1; G.wave=1; G.lives=mode.lives;
+  G.projectiles=[]; G.enemyProjectiles=[];
+  G.particles=[]; G.enemies=[];
+  G.boss=null; G.bossStage='wave';
+  G.cooldown=0; G.enemyFireTimer=0;
+  G.shakeTime=0; G.combo=0; G.comboTimer=0; G.elapsed=0;
+  G.scoreSaved = false;  // ← FIX: reset save guard each run
+  resetPlayer();
+  spawnWave();
+  updateHud();
+  ui.status.textContent = 'Mission live. Blast every alien in sight.';
+  ui.overlay.classList.remove('show');
+}
+
+function startGame() {
+  ensureAudio();
+  closeModal();
+  resetGame();
+}
+
+// ── Modal / overlay management ────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('gameOverModal').classList.add('open');
+  if (G.running && !G.over) G.paused = true;
+}
+function closeModal() {
+  document.getElementById('gameOverModal').classList.remove('open');
+}
+
+// ── End game — FIX: properly sequenced, no early unpause ─────────────────────
+function endGame() {
+  G.over    = true;
+  G.running = false;
+  G.lastScore = Math.floor(G.score);
+  G.highScore = Math.max(G.highScore, G.lastScore);
+  G.runCount++;
+  G.scoreSaved = false;  // fresh run = not saved yet
+
+  localStorage.setItem('mochi_hs', String(G.highScore));
+  localStorage.setItem('mochi_runs', String(G.runCount));
+
+  updateHud();
+
+  const isHigh = G.lastScore >= G.highScore;
+  const title  = isHigh ? 'New High Score! 🏆' : 'Mission Failed';
+  const diffLabel = DIFFS[G.difficulty].label;
+
+  // ── Canvas overlay (instant restart, no modal needed) ──
+  ui.overlayTitle.textContent = title;
+  ui.overlayTitle.className   = `overlay-title ${isHigh?'win':'fail'}`;
+  ui.overlay.querySelector('#overlayScoreVal').textContent = G.lastScore.toLocaleString();
+  ui.overlay.classList.add('show');
+
+  // Reset overlay save button state
+  const overlayBtn = document.getElementById('overlaySaveBtn');
+  if (overlayBtn) { overlayBtn.disabled = false; overlayBtn.textContent = '💾 Save Score'; }
+
+  // ── Modal (for name entry) ──
+  document.getElementById('gameOverTitle').textContent   = title;
+  document.getElementById('gameOverTitle').className     = `modal-title ${isHigh?'win':'fail'}`;
+  document.getElementById('gameOverSummary').textContent = `Mochi scored ${G.lastScore.toLocaleString()} pts on ${diffLabel} mode, reaching level ${G.level}.`;
+  document.getElementById('modalRunScore').textContent   = G.lastScore.toLocaleString();
+  document.getElementById('modalBestScore').textContent  = G.highScore.toLocaleString();
+  // Restore save button in modal
+  const saveBtn = document.getElementById('saveScoreBtn');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Save Score to Leaderboard'; }
+  // Pre-fill name from last run
+  document.getElementById('playerNameInput').value = localStorage.getItem('mochi_last_name') || '';
+
+  ui.status.textContent = 'Mission over. Restart instantly or save your score.';
+}
+
+// ── HUD update ────────────────────────────────────────────────────────────────
+function updateHud() {
+  ui.score.textContent = Math.floor(G.score).toLocaleString();
+  ui.lives.textContent = G.lives;
+  ui.level.textContent = G.level;
+  ui.wave.textContent  = G.wave;
+  ui.mode.textContent  = DIFFS[G.difficulty].label;
+}
+
+// ── Combat ────────────────────────────────────────────────────────────────────
+function shoot() {
+  if (G.cooldown>0||G.paused||G.over||!G.running) return;
+  G.projectiles.push({ x:player.x+player.width*0.18, y:player.y+player.height*0.32+player.bob, width:8, height:18, speed:520 });
+  G.cooldown = 0.22;
+  beep(920,0.07,0.02,'triangle');
+}
+
+function enemyShoot(dt) {
+  const mode = DIFFS[G.difficulty];
+  G.enemyFireTimer -= dt;
+  if (G.enemyFireTimer>0||!G.enemies.length) return;
+  const shooters = [...G.enemies].sort(()=>Math.random()-0.5).slice(0,Math.min(2+Math.floor(G.level/5),1+Math.floor(G.level/3)));
+  shooters.forEach(e => {
+    if (Math.random()>e.shootRate) return;
+    const cx=e.x+e.width/2, cy=e.y+e.height;
+    const tx=player.x+player.width/2, ty=player.y+player.height/3;
+    const dx=tx-cx, dy=ty-cy, dist=Math.max(1,Math.hypot(dx,dy));
+    const spd=(e.type==='spitter'?250:220)+G.level*12;
+    const spread=e.type==='spitter'?[-0.22,0,0.22]:[0];
+    spread.forEach(off => G.enemyProjectiles.push({
+      x:cx-4,y:cy, width:e.type==='tank'?8:6, height:e.type==='tank'?20:16,
+      speed:spd, vx:((dx/dist)+off)*spd*0.42, vy:(dy/dist)*spd,
+      color:e.type==='spitter'?'#89ff5a':e.type==='tank'?'#ffd166':'#ff7f7f'
+    }));
+  });
+  G.enemyFireTimer = clamp(mode.fireRate-G.level*0.04,0.28,2.1);
+}
+
+function destroyEnemy(idx, enemy, projIdx=-1) {
+  addParticles(enemy.x+enemy.width/2,enemy.y+enemy.height/2,enemy.tint,enemy.type==='tank'?24:14);
+  G.enemies.splice(idx,1);
+  if (projIdx>=0) G.projectiles.splice(projIdx,1);
+  if (enemy.type==='tank') {
+    [-1,1].forEach((d,n) => G.enemies.push(mkEnemy('mini',{
+      x:enemy.x+n*14,y:enemy.y+10,baseSpeed:enemy.speed*1.05,dir:d,
+      formationX:enemy.x+d*20,formationY:enemy.y+16,
+      behavior:'flank',angle:rng(0,Math.PI*2),entered:true
+    })));
+  }
+  G.combo++; G.comboTimer=1.5;
+  G.score += (enemy.points+Math.max(0,G.combo-1)*20)*DIFFS[G.difficulty].scoreMult;
+  G.shakeTime = G.settings.screenShake?(enemy.type==='tank'?0.14:0.08):0;
+  beep(enemy.type==='tank'?430:680,0.08,0.03,'square');
+}
+
+function hitPlayer() {
+  G.lives--;
+  G.shakeTime = G.settings.screenShake?0.28:0;
+  addParticles(player.x+player.width/2,player.y+player.height/2,'#ff6a6a',18);
+  beep(130,0.22,0.06,'sawtooth');
+  updateHud();
+  if (G.lives<=0) { endGame(); return; }
+  resetPlayer();
+  ui.status.textContent = `Mochi took a hit. ${G.lives} life${G.lives===1?'':'s'} left.`;
+}
+
+// ── Update ────────────────────────────────────────────────────────────────────
+function update(dt) {
+  if (!G.running||G.paused||G.over) return;
+  G.elapsed+=dt;
+  updateMusic(dt);
+  G.cooldown     = Math.max(0,G.cooldown-dt);
+  G.shakeTime    = Math.max(0,G.shakeTime-dt);
+  G.comboTimer   = Math.max(0,G.comboTimer-dt);
+  if (!G.comboTimer) G.combo=0;
+
+  const ml = G.keys.ArrowLeft ||G.keys.a||G.keys.A||G.touch.left;
+  const mr = G.keys.ArrowRight||G.keys.d||G.keys.D||G.touch.right;
+  if (ml) player.x -= player.speed*dt;
+  if (mr) player.x += player.speed*dt;
+  player.x = clamp(player.x,18,G.W-player.width-18);
+  player.tilt += (((mr?1:0)-(ml?1:0))*0.18-player.tilt)*Math.min(1,dt*10);
+  player.bob   = Math.sin(G.elapsed*7)*4;
+  if (G.touch.fire) shoot();
+
+  // Player projectiles
+  G.projectiles.forEach(p => p.y-=p.speed*dt);
+  G.projectiles = G.projectiles.filter(p=>p.y+p.height>0);
+
+  enemyShoot(dt);
+
+  // Enemy projectiles
+  G.enemyProjectiles.forEach(p => { p.x+=(p.vx||0)*dt; p.y+=(p.vy||p.speed)*dt; });
+  for (let i=G.enemyProjectiles.length-1;i>=0;i--) {
+    const p=G.enemyProjectiles[i];
+    if (p.y>G.H||p.x<-20||p.x>G.W+20) { G.enemyProjectiles.splice(i,1); continue; }
+    if (hits(p,player)) { G.enemyProjectiles.splice(i,1); hitPlayer(); }
+  }
+
+  // Enemy movement
+  G.enemies.forEach(e => {
+    e.angle+=dt*2.4; e.hitFlash=Math.max(0,e.hitFlash-dt*4);
+    if (!e.entered) {
+      const blend=Math.min(1,dt*(1.8+G.level*0.03));
+      e.x+=(e.formationX-e.x)*blend; e.y+=(e.formationY-e.y)*blend;
+      if (Math.abs(e.x-e.formationX)<6&&Math.abs(e.y-e.formationY)<6) e.entered=true;
+      return;
+    }
+    if (e.behavior==='swoop') {
+      e.formationX+=e.dir*e.speed*dt*0.75;
+      if (e.formationX<=30||e.formationX+e.width>=G.W-30) { e.dir*=-1; e.formationY+=16+G.level*0.8; }
+      e.x=e.formationX+Math.sin(e.angle)*22; e.y=e.formationY+Math.cos(e.angle*1.3)*10;
+    } else if (e.behavior==='flank') {
+      e.formationX+=e.dir*e.speed*dt*0.55; e.formationY+=Math.sin(e.angle)*18*dt;
+      if (e.formationX<=24||e.formationX+e.width>=G.W-24) e.dir*=-1;
+      e.x=e.formationX; e.y=e.formationY+Math.sin(e.angle*1.6)*22;
+    } else if (e.behavior==='dive') {
+      e.formationX+=Math.sin(e.angle*0.8)*12*dt*e.speed*0.08; e.formationY+=e.speed*dt*0.58;
+      e.x=e.formationX+Math.sin(e.angle*1.4)*28; e.y=e.formationY;
+      if (e.y>G.H*0.78) { e.formationY=72; e.formationX=clamp(player.x+rng(-120,120),40,G.W-80); }
+    } else {
+      e.formationY+=(0.42+G.level*0.01)*e.speed*dt;
+      e.x=e.formationX+Math.sin(e.angle*1.8)*34; e.y=e.formationY;
+      if (e.y>G.H*0.72) e.formationY=92;
+    }
+  });
+
+  // Boss movement
+  if (G.boss) {
+    const b=G.boss;
+    b.angle+=dt*1.6; b.hitFlash=Math.max(0,b.hitFlash-dt*3);
+    b.x+=b.dir*b.speed*dt;
+    if (b.x<=30||b.x+b.width>=G.W-30) b.dir*=-1;
+    b.y=68+Math.sin(b.angle)*18;
+    b.fireCooldown-=dt;
+    if (b.fireCooldown<=0) {
+      const cx=b.x+b.width/2, cy=b.y+b.height;
+      const tx=player.x+player.width/2, ty=player.y+player.height/2;
+      const dx=tx-cx,dy=ty-cy,dist=Math.max(1,Math.hypot(dx,dy));
+      const spd=280+G.level*14;
+      [-0.35,-0.18,0,0.18,0.35].forEach(off => G.enemyProjectiles.push({
+        x:cx-5,y:cy,width:10,height:24,speed:spd,
+        vx:((dx/dist)+off)*spd*0.45,vy:(dy/dist)*spd,color:'#ffd166'
+      }));
+      b.fireCooldown=Math.max(0.45,1.05-G.level*0.03);
+    }
+    if (hits(b,player)||b.y+b.height>=player.y+10) hitPlayer();
+  }
+
+  // Enemy/player collision
+  for (let i=G.enemies.length-1;i>=0;i--) {
+    const e=G.enemies[i];
+    if (e.y+e.height>=player.y+10||hits(e,player)) { G.enemies.splice(i,1); hitPlayer(); }
+  }
+
+  // Bullet/enemy collision
+  for (let i=G.projectiles.length-1;i>=0;i--) {
+    const p=G.projectiles[i];
+    let hi=-1;
+    for (let j=0;j<G.enemies.length;j++) { if (hits(p,G.enemies[j])) { hi=j; break; } }
+    if (hi>=0) {
+      const e=G.enemies[hi];
+      e.hp--; e.hitFlash=1;
+      if (e.hp<=0) destroyEnemy(hi,e,i);
+      else { addParticles(e.x+e.width/2,e.y+e.height/2,'#ffd166',8); G.projectiles.splice(i,1); G.combo=0; beep(250,0.05,0.02,'square'); }
+    }
+    if (G.boss&&hits(p,G.boss)) {
+      G.boss.hp--; G.boss.hitFlash=1; G.projectiles.splice(i,1);
+      addParticles(p.x,p.y,'#ffd166',6);
+      if (G.boss.hp<=0) destroyBoss(); else beep(220,0.05,0.02,'square');
+    }
+  }
+
+  // Particles
+  G.particles.forEach(p => { p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt; p.vx*=0.98; p.vy*=0.98; });
+  G.particles = G.particles.filter(p=>p.life>0);
+
+  // Wave clear → boss
+  if (!G.enemies.length&&!G.boss&&G.bossStage==='wave') {
+    G.score+=250*DIFFS[G.difficulty].scoreMult;
+    addParticles(G.W/2,160,'#ffd166',28);
+    beep(520,0.12,0.04,'triangle'); beep(760,0.16,0.03,'square');
+    spawnBoss();
+  }
+
+  G.highScore=Math.max(G.highScore,Math.floor(G.score));
+  updateHud();
+}
+
+// ── Draw helpers ──────────────────────────────────────────────────────────────
+function roundRect(x,y,w,h,r) {
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);   ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);     ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  if (G.settings.screenShake&&G.shakeTime>0) {
+    ui.arena.style.transform=`translate(${rng(-3,3)}px,${rng(-3,3)}px)`;
+  } else { ui.arena.style.transform=''; }
+
+  // Background
+  ctx.clearRect(0,0,G.W,G.H);
+  ctx.fillStyle='rgba(4,3,11,0.96)';
+  ctx.fillRect(0,0,G.W,G.H);
+  for (let i=0;i<14;i++) {
+    const y=(i*52+performance.now()*0.035)%(G.H+60);
+    ctx.fillStyle=i%2?'rgba(188,162,255,0.03)':'rgba(126,244,255,0.025)';
+    ctx.fillRect(0,y,G.W,2);
+  }
+
+  // Enemies
+  G.enemies.forEach(drawEnemy);
+  drawBoss();
+
+  // Projectiles
+  G.projectiles.forEach(p => {
+    ctx.shadowColor='#7ef4ff'; ctx.shadowBlur=12;
+    ctx.fillStyle='#7ef4ff';
+    roundRect(p.x,p.y,p.width,p.height,6); ctx.fill();
+    ctx.shadowBlur=0;
+  });
+  G.enemyProjectiles.forEach(p => {
+    ctx.shadowColor=p.color; ctx.shadowBlur=8;
+    ctx.fillStyle=p.color;
+    roundRect(p.x,p.y,p.width,p.height,5); ctx.fill();
+    ctx.shadowBlur=0;
+  });
+
+  // Particles
+  G.particles.forEach(p => {
+    ctx.globalAlpha=Math.max(0,p.life);
+    ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+
+  // Mochi
+  drawMochi();
+
+  // Combo text
+  if (G.combo>1&&G.comboTimer>0) {
+    ctx.textAlign='center';
+    ctx.font='900 28px Orbitron,sans-serif';
+    ctx.fillStyle='#ffd166';
+    ctx.shadowColor='#ffd166'; ctx.shadowBlur=16;
+    ctx.fillText(`${G.combo}× COMBO`,G.W/2,52);
+    ctx.shadowBlur=0;
+    ctx.textAlign='left';
+  }
+
+  // Idle / paused overlay
+  if (!G.running&&!G.over) {
+    ctx.fillStyle='rgba(4,3,11,0.55)';
+    ctx.fillRect(0,0,G.W,G.H);
+    ctx.fillStyle='#f0eeff'; ctx.textAlign='center';
+    ctx.font='900 42px Orbitron,sans-serif';
+    ctx.shadowColor='#bca2ff'; ctx.shadowBlur=28;
+    ctx.fillText('THE ADVENTURES OF MOCHI',G.W/2,G.H/2-24);
+    ctx.shadowBlur=0;
+    ctx.font='600 20px Exo\\ 2,sans-serif';
+    ctx.fillStyle='#ffd166';
+    ctx.fillText('Press Start Mission to launch.',G.W/2,G.H/2+18);
+    ctx.textAlign='left';
+  }
+
+  if (G.paused&&G.running&&!G.over) {
+    ctx.fillStyle='rgba(4,3,11,0.5)';
+    ctx.fillRect(0,0,G.W,G.H);
+    ctx.fillStyle='#fff'; ctx.textAlign='center';
+    ctx.font='900 52px Orbitron,sans-serif';
+    ctx.shadowColor='#bca2ff'; ctx.shadowBlur=32;
+    ctx.fillText('PAUSED',G.W/2,G.H/2);
+    ctx.shadowBlur=0;
+    ctx.font='600 18px Exo\\ 2,sans-serif';
+    ctx.fillStyle='#7ef4ff';
+    ctx.fillText('The aliens are waiting.',G.W/2,G.H/2+36);
+    ctx.textAlign='left';
+  }
+}
+
+function drawMochi() {
+  ctx.save();
+  const x=player.x, y=player.y+player.bob;
+  ctx.globalAlpha=0.3;
+  ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(x+28,y+76,28,9,0,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.translate(x+26,y+28); ctx.rotate(player.tilt);
+  const pulse=1+Math.sin(G.elapsed*4.2)*0.035;
+  ctx.scale(pulse,1.04);
+  ctx.translate(-(x+26),-(y+28));
+
+  if (mochiReady) {
+    ctx.shadowColor='rgba(188,162,255,0.55)'; ctx.shadowBlur=22;
+    ctx.drawImage(mochiOffscreen,x-20,y-28,92,112);
+    ctx.shadowBlur=0;
+    ctx.restore(); return;
+  }
+
+  // Fallback pixel Mochi
+  ctx.fillStyle='#fff8f4';
+  ctx.beginPath(); ctx.ellipse(x+26,y+28,23,24,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffd6e8';
+  ctx.beginPath(); ctx.ellipse(x+18,y+34,6,4.5,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+34,y+34,6,4.5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#23122f';
+  ctx.beginPath(); ctx.arc(x+19,y+24,2.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x+33,y+24,2.4,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#23122f'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(x+26,y+29,5,0.2,Math.PI-0.2); ctx.stroke();
+  ctx.fillStyle='#ff5ea8'; ctx.fillRect(x+6,y+12,40,7);
+  ctx.fillStyle='#7ef4ff';
+  ctx.beginPath(); ctx.moveTo(x+26,y-4); ctx.lineTo(x+16,y+14); ctx.lineTo(x+36,y+14); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawEnemy(e) {
+  ctx.save();
+  ctx.translate(e.x+e.width/2,e.y+e.height/2);
+  ctx.rotate(Math.sin(e.angle)*0.08+(e.dir||0)*0.04);
+  const es=1+Math.cos(e.angle*1.3)*0.06;
+  ctx.scale(es,1.02);
+  ctx.translate(-e.width/2,-e.height/2);
+
+  ctx.globalAlpha=0.25; ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(e.width/2,e.height+10,16,6,0,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+
+  const fill=e.hitFlash>0?'#fff3a6':e.tint;
+  ctx.shadowColor=e.tint; ctx.shadowBlur=e.hitFlash>0?20:8;
+  ctx.fillStyle=fill;
+  ctx.beginPath(); ctx.ellipse(e.width/2,e.height/2,e.width*0.45,e.height*0.41,0,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+
+  ctx.fillStyle=e.type==='tank'?'#3fa52f':e.type==='spitter'?'#4be384':'#58d93f';
+  ctx.beginPath(); ctx.ellipse(e.width/2,e.height*0.77,e.width*0.29,e.height*0.2,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#14210f';
+  ctx.beginPath();
+  ctx.arc(e.width*0.34,e.height*0.45,e.type==='tank'?3.4:2.6,0,Math.PI*2); ctx.fill();
+  ctx.beginPath();
+  ctx.arc(e.width*0.66,e.height*0.45,e.type==='tank'?3.4:2.6,0,Math.PI*2); ctx.fill();
+
+  if (e.type==='tank') {
+    ctx.strokeStyle='#cfff7b'; ctx.lineWidth=2;
+    roundRect(4,2,e.width-8,7,4); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.18)';
+    roundRect(6,4,(e.width-12)*e.hp/e.maxHp,3,2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBoss() {
+  if (!G.boss) return;
+  const b=G.boss;
+  ctx.save();
+  ctx.translate(b.x+b.width/2,b.y+b.height/2);
+  ctx.rotate(Math.sin(b.angle)*0.04);
+  ctx.translate(-b.width/2,-b.height/2);
+
+  ctx.globalAlpha=0.25; ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(b.width/2,b.height+18,54,12,0,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+
+  const fill=b.hitFlash>0?'#fff1a4':'#7dff58';
+  ctx.shadowColor='#7dff58'; ctx.shadowBlur=b.hitFlash>0?30:14;
+  ctx.fillStyle=fill;
+  roundRect(10,14,b.width-20,b.height-34,26); ctx.fill();
+  ctx.shadowBlur=0;
+
+  ctx.fillStyle='#315d22';
+  roundRect(26,30,b.width-52,b.height-54,22); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.arc(b.width*0.33,b.height*0.42,10,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(b.width*0.67,b.height*0.42,10,0,Math.PI*2); ctx.fill();
+
+  ctx.fillStyle='#ffd166';
+  roundRect(20,6,b.width-40,8,4); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  roundRect(26,10,(b.width-52)*b.hp/b.maxHp,4,2); ctx.fill();
+
+  ctx.restore();
+}
+
+// ── Game loop ─────────────────────────────────────────────────────────────────
+function loop(ts) {
+  if (!G.lastFrame) G.lastFrame=ts;
+  const dt=Math.min(0.032,(ts-G.lastFrame)/1000);
+  G.lastFrame=ts;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ── Events ────────────────────────────────────────────────────────────────────
+function initEvents() {
+  // Touch hold
+  function bindHold(el,key) {
+    const on=e=>{e.preventDefault();G.touch[key]=true;ensureAudio();};
+    const off=e=>{e.preventDefault();G.touch[key]=false;};
+    el.addEventListener('touchstart',on,{passive:false});
+    el.addEventListener('touchend',off,{passive:false});
+    el.addEventListener('touchcancel',off,{passive:false});
+    el.addEventListener('mousedown',on);
+    el.addEventListener('mouseup',off);
+    el.addEventListener('mouseleave',off);
+  }
+  bindHold(ui.touchL,'left');
+  bindHold(ui.touchR,'right');
+  bindHold(ui.touchF,'fire');
+
+  // Keyboard
+  document.addEventListener('keydown',e=>{
+    G.keys[e.key]=true;
+    if (e.key===' '||e.code==='Space') { e.preventDefault(); shoot(); }
+    if (e.key.toLowerCase()==='p'&&G.running&&!G.over) {
+      G.paused=!G.paused;
+      ui.status.textContent=G.paused?'Paused.':'Back in action.';
+    }
+  });
+  document.addEventListener('keyup',e=>{ G.keys[e.key]=false; });
+
+  // Nav links
+  document.querySelectorAll('[data-nav]').forEach(b => b.addEventListener('click',()=>goPage(b.dataset.nav)));
+
+  // Start / pause
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('pauseBtn').addEventListener('click', ()=>{
+    if (!G.running||G.over) return;
+    G.paused=!G.paused;
+    ui.status.textContent=G.paused?'Paused. Mochi holds position.':'Back in the fight.';
+  });
+
+  // Hero start (home page → play)
+  document.getElementById('heroStartBtn').addEventListener('click',()=>{goPage('play');startGame();});
+
+  // ── Canvas overlay buttons (instant restart) ──
+  document.getElementById('overlayRestartBtn').addEventListener('click',()=>{
+    ui.overlay.classList.remove('show');
+    startGame();
+  });
+  document.getElementById('overlaySaveBtn').addEventListener('click',()=>{
+    saveScore();
+    // After saving, open modal for confirmation view
+    openModal();
+  });
+  document.getElementById('overlayHomeBtn').addEventListener('click',()=>{
+    ui.overlay.classList.remove('show');
+    goPage('home');
+  });
+
+  // ── Modal buttons ──
+  document.getElementById('playAgainBtn').addEventListener('click',()=>{
+    closeModal();
+    startGame();
+  });
+  document.getElementById('saveScoreBtn').addEventListener('click', saveScore);
+  document.getElementById('gameOverHomeBtn').addEventListener('click',()=>{
+    closeModal();
+    ui.overlay.classList.remove('show');
+    goPage('home');
+  });
+
+  // Settings
+  document.getElementById('screenShakeToggle').addEventListener('change',e=>{
+    G.settings.screenShake=e.target.checked;
+    saveSettings();
+  });
+  document.getElementById('musicVolume').addEventListener('input',e=>{
+    G.settings.musicVolume=+e.target.value;
+    document.getElementById('musicVolumeValue').textContent=`${G.settings.musicVolume}%`;
+    saveSettings();
+  });
+  document.getElementById('sfxVolume').addEventListener('input',e=>{
+    G.settings.sfxVolume=+e.target.value;
+    document.getElementById('sfxVolumeValue').textContent=`${G.settings.sfxVolume}%`;
+    saveSettings();
+  });
+
+  // Clear leaderboard
+  document.getElementById('clearLbBtn').addEventListener('click',()=>{
+    if (confirm('Clear the entire leaderboard?')) {
+      saveLb([]);
+      renderLb('lbFull'); renderLb('lbHome');
+      toast('Leaderboard cleared','Fresh start for all pilots.');
+    }
+  });
+
+  window.addEventListener('resize',resizeCanvas);
+  window.addEventListener('orientationchange',resizeCanvas);
+}
+
+// ── Persistence ───────────────────────────────────────────────────────────────
+function saveSettings() { localStorage.setItem('mochi_settings',JSON.stringify(G.settings)); }
+function loadSettings() {
+  try { const s=JSON.parse(localStorage.getItem('mochi_settings')||'{}'); G.settings={...G.settings,...s}; } catch{}
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+function boot() {
+  loadSettings();
+  const d=localStorage.getItem('mochi_diff');
+  if (d&&DIFFS[d]) G.difficulty=d;
+  G.highScore = +localStorage.getItem('mochi_hs')||0;
+  G.runCount  = +localStorage.getItem('mochi_runs')||0;
+
+  renderDiffUI();
+  applySettingsUI();
+  renderLb('lbHome');
+  renderLb('lbFull');
+  updateHomeStats();
+  resetPlayer();
+  updateHud();
+  initEvents();
+  resizeCanvas();
+  goPage('home');
+  requestAnimationFrame(loop);
+}
+
+boot();
+</script>
+</body>
+</html>
