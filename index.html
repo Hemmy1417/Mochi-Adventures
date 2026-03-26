@@ -187,6 +187,11 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:3/2;max-height:min(68dv
 .ov-score{font-size:clamp(.88rem,2.5vw,1.45rem);color:var(--muted);text-align:center;}
 .ov-score span{color:var(--gold);font-weight:700;}
 .ov-btns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;}
+.ov-name-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;width:min(320px,80vw);}
+.ov-name-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);}
+.ov-name-input{width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(188,162,255,.35);color:#fff;font-family:var(--font);font-size:0.95rem;font-weight:600;outline:none;text-align:center;transition:border-color .2s,box-shadow .2s;}
+.ov-name-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(188,162,255,.15);}
+.ov-name-input::placeholder{color:rgba(255,255,255,.3);font-weight:400;}
 
 .play-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .status{font-size:0.76rem;color:var(--muted);}
@@ -426,9 +431,14 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:3/2;max-height:min(68dv
       <div class="c-overlay" id="cOverlay">
         <div class="ov-title" id="ovTitle">Mission Failed</div>
         <div class="ov-score">Score: <span id="ovScore">0</span></div>
+        <div class="ov-name-wrap">
+          <div class="ov-name-label">✏️ Enter your callsign</div>
+          <input class="ov-name-input" id="ovNameInput" maxlength="18"
+            placeholder="Your name here…" autocomplete="off" spellcheck="false">
+        </div>
         <div class="ov-btns">
-          <button class="btn btn-launch" id="ovRestart">⚡ Restart</button>
-          <button class="btn btn-secondary" id="ovSave">💾 Save Score</button>
+          <button class="btn btn-success" id="ovSave">💾 Save Score</button>
+          <button class="btn btn-launch" id="ovRestart">⚡ Play Again</button>
           <button class="btn btn-secondary" id="ovHome">🏠 Home</button>
         </div>
       </div>
@@ -626,12 +636,28 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 
 async function saveScore(){
   if(G.scoreSaved){toast('Already saved','Your run is already on the board!');return;}
-  const name=document.getElementById('nameInput').value.trim()||'Mochi Ace';
-  localStorage.setItem('mochi_name',name);G.scoreSaved=true;
+  // Read name from whichever input the player used — overlay takes priority
+  const ovInput  = document.getElementById('ovNameInput');
+  const modInput = document.getElementById('nameInput');
+  const ovVal    = ovInput  ? ovInput.value.trim()  : '';
+  const modVal   = modInput ? modInput.value.trim() : '';
+  const name     = ovVal || modVal || 'Mochi Ace';
+  // Sync both inputs so they show the same name
+  if(ovInput)  ovInput.value  = name;
+  if(modInput) modInput.value = name;
+  localStorage.setItem('mochi_name', name);
+  G.scoreSaved = true;
   ['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b){b.disabled=true;b.textContent='⏳ Saving…';}});
-  const ok=await fbPush(name,G.lastScore,DIFFS[G.difficulty].label,G.level);
-  if(ok){['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent='✅ Saved!';});toast('Global Leaderboard!',name+' · '+G.lastScore.toLocaleString()+' pts');loadLb('lbHome');loadLb('lbFull');}
-  else{G.scoreSaved=false;['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b){b.disabled=false;b.textContent=id==='modalSave'?'💾 Save to Global Leaderboard':'💾 Save Score';}});toast('Save Failed','Check connection and retry.');}
+  const ok = await fbPush(name, G.lastScore, DIFFS[G.difficulty].label, G.level);
+  if(ok){
+    ['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent='✅ Saved!';});
+    toast('🏆 On the board!', name+' · '+G.lastScore.toLocaleString()+' pts');
+    loadLb('lbHome'); loadLb('lbFull');
+  } else {
+    G.scoreSaved = false;
+    ['modalSave','ovSave'].forEach(id=>{const b=document.getElementById(id);if(b){b.disabled=false;b.textContent=id==='modalSave'?'💾 Save to Global Leaderboard':'💾 Save Score';}});
+    toast('Save Failed','Check connection and retry.');
+  }
 }
 
 // ── UI ────────────────────────────────────────────────────────────────────────
@@ -672,7 +698,7 @@ function closeModal(){document.getElementById('gameModal').classList.remove('ope
 
 function endGame(){
   G.over=true;G.running=false;G.lastScore=Math.floor(G.score);G.highScore=Math.max(G.highScore,G.lastScore);G.runCount++;G.scoreSaved=false;
-  localStorage.setItem('mochi_hs',G.highScore);localStorage.setItem('mochi_runs',G.runCount);
+  localStorage.setItem('mochi_hs',G.highScore);localStorage.setItem('mochi_runs',G.runCount);localStorage.setItem('mochi_last',G.lastScore);
   updateHud();
   const isH=G.lastScore>=G.highScore&&G.lastScore>0,title=isH?'New High Score! 🏆':'Mission Failed';
   document.getElementById('ovTitle').textContent=title;document.getElementById('ovTitle').className='ov-title '+(isH?'win':'fail');
@@ -683,8 +709,11 @@ function endGame(){
   document.getElementById('modalBody').textContent='Mochi scored '+G.lastScore.toLocaleString()+' pts on '+DIFFS[G.difficulty].label+' · Level '+G.level+'.';
   document.getElementById('modalRun').textContent=G.lastScore.toLocaleString();document.getElementById('modalBest').textContent=G.highScore.toLocaleString();
   document.getElementById('mochiQuote').textContent=QUOTES[Math.floor(Math.random()*QUOTES.length)];
-  document.getElementById('nameInput').value=localStorage.getItem('mochi_name')||'';
-  setSt('Mission over. Restart or save your score.');
+  const savedName = localStorage.getItem('mochi_name') || '';
+  document.getElementById('nameInput').value = savedName;
+  const ovNI = document.getElementById('ovNameInput');
+  if(ovNI){ ovNI.value = savedName; setTimeout(()=>ovNI.focus(), 350); }
+  setSt('Mission over. Enter your callsign and save your score!');updateHomeStats();
 }
 function updateHud(){document.getElementById('hudScore').textContent=Math.floor(G.score).toLocaleString();document.getElementById('hudLives').textContent=G.lives;document.getElementById('hudLevel').textContent=G.level;document.getElementById('hudWave').textContent=G.wave;document.getElementById('hudMode').textContent=DIFFS[G.difficulty].label;}
 
@@ -897,10 +926,16 @@ function initEvents(){
   document.getElementById('pauseBtn').addEventListener('click',()=>{if(!G.running||G.over)return;G.paused=!G.paused;setSt(G.paused?'Paused. Mochi holds position.':'Back in the fight.');});
   document.getElementById('heroStartBtn').addEventListener('click',()=>{goPage('play');startGame();});
   document.getElementById('ovRestart').addEventListener('click',()=>{document.getElementById('cOverlay').classList.remove('show');startGame();});
-  document.getElementById('ovSave').addEventListener('click',async()=>{await saveScore();loadLb('lbHome');loadLb('lbFull');openModal();});
+  document.getElementById('ovSave').addEventListener('click', saveScore);
   document.getElementById('ovHome').addEventListener('click',()=>{document.getElementById('cOverlay').classList.remove('show');goPage('home');});
   document.getElementById('modalPlay').addEventListener('click',()=>{closeModal();startGame();});
-  document.getElementById('modalSave').addEventListener('click',saveScore);
+  document.getElementById('modalSave').addEventListener('click', ()=>{
+    // sync modal input back to overlay input before saving
+    const ov = document.getElementById('ovNameInput');
+    const mo = document.getElementById('nameInput');
+    if(ov && mo && mo.value.trim()) ov.value = mo.value.trim();
+    saveScore();
+  });
   document.getElementById('modalHome').addEventListener('click',()=>{closeModal();document.getElementById('cOverlay').classList.remove('show');goPage('home');});
   document.getElementById('shakeToggle').addEventListener('change',e=>{G.settings.shake=e.target.checked;saveSettings();});
   document.getElementById('musicVol').addEventListener('input',e=>{G.settings.musicVol=+e.target.value;document.getElementById('musicVolVal').textContent=e.target.value+'%';saveSettings();});
@@ -912,7 +947,7 @@ function initEvents(){
 // ── Boot ──────────────────────────────────────────────────────────────────────
 function boot(){
   loadSettings();const d=localStorage.getItem('mochi_diff');if(d&&DIFFS[d])G.difficulty=d;
-  G.highScore=+localStorage.getItem('mochi_hs')||0;G.runCount=+localStorage.getItem('mochi_runs')||0;
+  G.highScore=+localStorage.getItem('mochi_hs')||0;G.runCount=+localStorage.getItem('mochi_runs')||0;G.lastScore=+localStorage.getItem('mochi_last')||0;
   renderDiff();applySettings();loadLb('lbHome');loadLb('lbFull');updateHomeStats();resetP();updateHud();
   initEvents();resizeCanvas();goPage('home');requestAnimationFrame(loop);
 }
